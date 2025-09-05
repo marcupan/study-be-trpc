@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String
+  name          String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  ownedBoards   Board[]        @relation("BoardOwner")
+  collaborations Collaboration[]
+  tasks         Task[]         @relation("TaskAssignee")
+  createdTasks  Task[]         @relation("TaskCreator")
+  updatedTasks  Task[]         @relation("TaskUpdater")
+}
+
+model Board {
+  id            String         @id @default(uuid())
+  name          String
+  description   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  ownerId       String
+  owner         User           @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  tasks         Task[]
+  collaborations Collaboration[]
+}
+
+model Task {
+  id            String         @id @default(uuid())
+  title         String
+  description   String?
+  status        String         @default("Todo") // Todo, InProgress, Done
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  boardId       String
+  board         Board          @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  assigneeId    String?
+  assignee      User?          @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  creatorId     String
+  creator       User           @relation("TaskCreator", fields: [creatorId], references: [id])
+  updaterId     String
+  updater       User           @relation("TaskUpdater", fields: [updaterId], references: [id])
+}
+
+model Collaboration {
+  id            String         @id @default(uuid())
+  accessLevel   String         @default("read") // read, write
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  boardId       String
+  board         Board          @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, boardId])
+}

@@ -1,0 +1,58 @@
+# Node/Monorepo standard ignores
+node_modules/
+.pnpm-store/
+.pnp.cjs
+.pnp.data.json
+
+# Build outputs
+packages/**/dist/
+dist/
+.next/
+.out/
+.vercel/
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# Environment variables
+.env
+.env.*
+packages/**/.env
+packages/**/.env.*
+
+# Prisma / SQLite
+packages/server/prisma/dev.db
+packages/server/prisma/dev.db-journal
+packages/**/prisma/*.db
+packages/**/prisma/*.db-journal
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+
+# Turborepo cache
+.turbo/
+
+# Next.js
+packages/client/.next/
+packages/client/out/
+
+# Coverage
+coverage/
+
+# Lockfiles (keep only one for chosen PM)
+package-lock.json
+yarn.lock
