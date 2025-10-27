@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  transpilePackages: ['@tasksync/shared'],
+    reactStrictMode: true,
+    transpilePackages: ['@tasksync/shared'],
 };
 
 module.exports = nextConfig;
