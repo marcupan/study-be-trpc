@@ -64,7 +64,8 @@ yarn prisma migrate dev --name init
 yarn prisma generate
 ```
 
-> **Note**: The `prisma generate` command is required to generate the Prisma client code before running the application. If you encounter errors about Prisma client not being initialized, run this command.
+> **Note**: The `prisma generate` command is required to generate the Prisma client code before running the application.
+> If you encounter errors about Prisma client not being initialized, run this command.
 
 ## How to Run
 
@@ -80,6 +81,7 @@ yarn dev
 ```
 
 This will start both the client and server in development mode with hot reloading:
+
 - Client will be available at: http://localhost:3000
 - Server will be available at: http://localhost:4000
 
@@ -123,7 +125,8 @@ be-trpc/
 
 ## Database
 
-The application uses SQLite as the database, which is configured through Prisma. The database file is located at `packages/server/prisma/dev.db`.
+The application uses SQLite as the database, which is configured through Prisma. The database file is located at
+`packages/server/prisma/dev.db`.
 
 If you need to reset the database or make changes to the schema:
 
@@ -136,33 +139,38 @@ npx prisma studio         # Open Prisma Studio to view/edit data
 
 ## Dependency Management
 
-This project uses pnpm workspaces and package overrides to manage dependencies across packages. The following major dependencies are used:
+This project uses pnpm workspaces and package overrides to manage dependencies across packages. The following major
+dependencies are used:
 
 - Next.js 15.x (frontend framework)
 - ESLint 9.x (code linting)
 - tRPC 10.x (type-safe API)
 - Prisma 5.x (database ORM)
 
-If you encounter any deprecation warnings or security vulnerabilities when installing dependencies, please update the relevant packages in the package.json files or add overrides in the root package.json file.
+If you encounter any deprecation warnings or security vulnerabilities when installing dependencies, please update the
+relevant packages in the package.json files or add overrides in the root package.json file.
 
 ### Troubleshooting
 
 If you encounter any of the following issues:
 
-1. **Prisma Client Not Initialized**: Run `npx prisma generate` in the `packages/server` directory to generate the Prisma client code.
+1. **Prisma Client Not Initialized**: Run `npx prisma generate` in the `packages/server` directory to generate the
+   Prisma client code.
 
-2. **Multiple Lockfiles Warning**: If you see a warning about multiple lockfiles, remove any lockfiles other than the one being used by your package manager (e.g., if using pnpm, keep only pnpm-lock.yaml).
+2. **Multiple Lockfiles Warning**: If you see a warning about multiple lockfiles, remove any lockfiles other than the
+   one being used by your package manager (e.g., if using pnpm, keep only pnpm-lock.yaml).
 
-3. **Package Manager Not Specified**: The project uses pnpm as the package manager. The root package.json includes a "packageManager" property specifying pnpm@8.6.0.
+3. **Package Manager Not Specified**: The project uses pnpm as the package manager. The root package.json includes a "
+   packageManager" property specifying pnpm@8.6.0.
 
 ### Recent Updates (2025-07-17)
 
 - Updated Next.js from 13.5.4 to 15.4.1 to fix security vulnerabilities
 - Updated ESLint from 8.51.0 to 9.0.0
 - Added package overrides to address deprecated transitive dependencies:
-  - inflight (memory leak issues fixed)
-  - rimraf (updated to v5)
-  - glob (updated to v10)
-  - @humanwhocodes/config-array (replaced with @eslint/config-array)
-  - @humanwhocodes/object-schema (replaced with @eslint/object-schema)
-  - npmlog and gauge (updated to newer versions)
+    - inflight (memory leak issues fixed)
+    - rimraf (updated to v5)
+    - glob (updated to v10)
+    - @humanwhocodes/config-array (replaced with @eslint/config-array)
+    - @humanwhocodes/object-schema (replaced with @eslint/object-schema)
+    - npmlog and gauge (updated to newer versions)
