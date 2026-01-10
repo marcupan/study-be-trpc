@@ -1,20 +1,32 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    // Output
     "outDir": "./dist",
     "rootDir": "./src",
-    "composite": true
+
+    // Project References
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+
+    // Server-specific (Node.js)
+    "module": "commonjs",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "moduleResolution": "node",
+
+    // Ensure strict mode is inherited and enforced
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    // Note: exactOptionalPropertyTypes disabled due to Prisma compatibility
+    "exactOptionalPropertyTypes": false
   },
   "references": [
     {
       "path": "../shared"
     }
   ],
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }
