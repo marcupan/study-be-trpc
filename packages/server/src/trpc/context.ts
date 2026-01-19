@@ -1,27 +1,40 @@
-import {inferAsyncReturnType} from '@trpc/server';
-import {CreateExpressContextOptions} from '@trpc/server/adapters/express';
-import {PrismaClient} from '@prisma/client';
-import {verifyToken} from '../utils/auth';
+import { PrismaLibSql } from '@prisma/adapter-libsql';
+import { PrismaClient } from '@prisma/client';
+import dotenv from 'dotenv';
 
-// Create a single instance of the Prisma client
-const prisma = new PrismaClient();
+import { verifyToken } from '../utils/auth';
+
+import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
+
+
+
+// Load environment variables before initializing Prisma
+dotenv.config();
+
+// Create Prisma adapter for SQLite with Prisma 7
+const adapter = new PrismaLibSql({
+  url: process.env['DATABASE_URL'] ?? 'file:./prisma/dev.db',
+});
+
+// Create a single instance of the Prisma client with an adapter
+export const prisma = new PrismaClient({ adapter });
 
 /**
  * Creates context for the tRPC server
  */
-export const createContext = async ({req, res}: CreateExpressContextOptions) => {
-    // Get the user token from the headers
-    const token = req.headers.authorization?.split(' ')[1];
+export const createContext = ({ req, res }: CreateExpressContextOptions) => {
+  // Get the user token from the headers
+  const token = req.headers.authorization?.split(' ')[1];
 
-    // Try to retrieve a user with the token
-    const user = token ? await verifyToken(token) : null;
+  // Try to retrieve a user with the token
+  const user = token ? verifyToken(token) : null;
 
-    return {
-        prisma,
-        req,
-        res,
-        user,
-    };
+  return {
+    prisma,
+    req,
+    res,
+    user,
+  };
 };
 
-export type Context = inferAsyncReturnType<typeof createContext>;
+export type Context = Awaited<ReturnType<typeof createContext>>;

@@ -1,215 +1,182 @@
-import {TRPCError} from '@trpc/server';
-import {z} from 'zod';
-import {protectedProcedure, router} from '../trpc';
-import {BoardCreateSchema, BoardUpdateSchema} from '@tasksync/shared';
+import { z } from 'zod';
+
+import { BoardCreateSchema, BoardUpdateSchema } from '@tasksync/shared';
+
+import { checkBoardAccess, requireBoardOwner } from '../../utils/permissions';
+import { protectedProcedure, router } from '../trpc';
 
 export const boardRouter = router({
-    // Create a new board
-    create: protectedProcedure
-        .input(BoardCreateSchema)
-        .mutation(async ({ctx, input}) => {
-            const {name, description} = input;
+  // Create a new board
+  create: protectedProcedure.input(BoardCreateSchema).mutation(async ({ ctx, input }) => {
+    const { name, description } = input;
 
-            const board = await ctx.prisma.board.create({
-                data: {
-                    name,
-                    description: description || null,
-                    ownerId: ctx.user.id,
-                },
-            });
+    return ctx.prisma.board.create({
+      data: {
+        name,
+        description: description ?? null,
+        ownerId: ctx.user.id,
+      },
+    });
+  }),
 
-            return board;
-        }),
+  // Get all boards for the current user (owned and collaborated) with pagination
+  getAll: protectedProcedure
+    .input(
+      z
+        .object({
+          limit: z.number().min(1).max(100).default(20),
+          cursor: z.string().optional(),
+        })
+        .optional()
+    )
+    .query(async ({ ctx, input }) => {
+      const limit = input?.limit ?? 20;
+      const cursor = input?.cursor;
 
-    // Get all boards for the current user (owned and collaborated)
-    getAll: protectedProcedure.query(async ({ctx}) => {
-        // Get boards owned by the user
-        const ownedBoards = await ctx.prisma.board.findMany({
+      // Get boards owned by the user with pagination
+      const ownedBoards = await ctx.prisma.board.findMany({
+        where: {
+          ownerId: ctx.user.id,
+        },
+        take: limit + 1,
+        cursor: cursor ? { id: cursor } : undefined,
+        orderBy: {
+          updatedAt: 'desc',
+        },
+      });
+
+      // Get boards the user collaborates on with pagination
+      const collaboratedBoards = await ctx.prisma.board.findMany({
+        where: {
+          collaborations: {
+            some: {
+              userId: ctx.user.id,
+            },
+          },
+        },
+        take: limit + 1,
+        cursor: cursor ? { id: cursor } : undefined,
+        include: {
+          owner: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+            },
+          },
+          collaborations: {
             where: {
-                ownerId: ctx.user.id,
+              userId: ctx.user.id,
             },
-            orderBy: {
-                updatedAt: 'desc',
+            select: {
+              accessLevel: true,
             },
-        });
+          },
+        },
+        orderBy: {
+          updatedAt: 'desc',
+        },
+      });
 
-        // Get boards the user collaborates on
-        const collaboratedBoards = await ctx.prisma.board.findMany({
-            where: {
-                collaborations: {
-                    some: {
-                        userId: ctx.user.id,
-                    },
-                },
-            },
-            include: {
-                owner: {
-                    select: {
-                        id: true,
-                        email: true,
-                        name: true,
-                    },
-                },
-                collaborations: {
-                    where: {
-                        userId: ctx.user.id,
-                    },
-                    select: {
-                        accessLevel: true,
-                    },
-                },
-            },
-            orderBy: {
-                updatedAt: 'desc',
-            },
-        });
+      // Calculate next cursor for owned boards
+      let ownedNextCursor: string | undefined;
+      if (ownedBoards.length > limit) {
+        const nextItem = ownedBoards.pop();
+        ownedNextCursor = nextItem?.id;
+      }
 
-        // Format collaborated boards to include access level
-        const formattedCollaboratedBoards = collaboratedBoards.map((board) => ({
-            ...board,
-            accessLevel: board.collaborations[0]?.accessLevel || 'read',
-            collaborations: undefined, // Remove the collaborations array
-        }));
+      // Calculate next cursor for collaborated boards
+      let collaboratedNextCursor: string | undefined;
+      if (collaboratedBoards.length > limit) {
+        const nextItem = collaboratedBoards.pop();
+        collaboratedNextCursor = nextItem?.id;
+      }
 
-        return {
-            owned: ownedBoards,
-            collaborated: formattedCollaboratedBoards,
-        };
+      // Format collaborated boards to include access level
+      const formattedCollaboratedBoards = collaboratedBoards.map((board) => ({
+        ...board,
+        accessLevel: board.collaborations[0]?.accessLevel ?? 'read',
+        collaborations: undefined, // Remove the collaborations array
+      }));
+
+      return {
+        owned: ownedBoards,
+        collaborated: formattedCollaboratedBoards,
+        nextCursor: {
+          owned: ownedNextCursor,
+          collaborated: collaboratedNextCursor,
+        },
+      };
     }),
 
-    // Get a single board by ID
-    getById: protectedProcedure
-        .input(z.object({id: z.string()}))
-        .query(async ({ctx, input}) => {
-            const {id} = input;
+  // Get a single board by ID
+  getById: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    const { id } = input;
 
-            // Find the board
-            const board = await ctx.prisma.board.findUnique({
-                where: {id},
-                include: {
-                    owner: {
-                        select: {
-                            id: true,
-                            email: true,
-                            name: true,
-                        },
-                    },
-                    collaborations: {
-                        include: {
-                            user: {
-                                select: {
-                                    id: true,
-                                    email: true,
-                                    name: true,
-                                },
-                            },
-                        },
-                    },
-                },
-            });
+    // Check access and get board
+    await checkBoardAccess(ctx.prisma, id, ctx.user.id);
 
-            if (!board) {
-                throw new TRPCError({
-                    code: 'NOT_FOUND',
-                    message: 'Board not found',
-                });
-            }
+    // Fetch full board with relations
+    return ctx.prisma.board.findUnique({
+      where: { id },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        },
+        collaborations: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }),
 
-            // Check if user is owner or collaborator
-            const isOwner = board.ownerId === ctx.user.id;
-            const isCollaborator = board.collaborations.some(
-                (collab) => collab.userId === ctx.user.id
-            );
+  // Update a board
+  update: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        data: BoardUpdateSchema,
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, data } = input;
 
-            if (!isOwner && !isCollaborator) {
-                throw new TRPCError({
-                    code: 'FORBIDDEN',
-                    message: 'You do not have access to this board',
-                });
-            }
+      // Check if a user has write access
+      await checkBoardAccess(ctx.prisma, id, ctx.user.id, 'write');
 
-            return board;
-        }),
+      // Update the board
+      return ctx.prisma.board.update({
+        where: { id },
+        data,
+      });
+    }),
 
-    // Update a board
-    update: protectedProcedure
-        .input(
-            z.object({
-                id: z.string(),
-                data: BoardUpdateSchema,
-            })
-        )
-        .mutation(async ({ctx, input}) => {
-            const {id, data} = input;
+  // Delete a board
+  delete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { id } = input;
 
-            // Find the board
-            const board = await ctx.prisma.board.findUnique({
-                where: {id},
-                include: {
-                    collaborations: true,
-                },
-            });
+      // Check if the user is the owner
+      await requireBoardOwner(ctx.prisma, id, ctx.user.id);
 
-            if (!board) {
-                throw new TRPCError({
-                    code: 'NOT_FOUND',
-                    message: 'Board not found',
-                });
-            }
+      // Delete the board (cascades to tasks and collaborations)
+      await ctx.prisma.board.delete({
+        where: { id },
+      });
 
-            // Check if user is owner or has write access
-            const isOwner = board.ownerId === ctx.user.id;
-            const hasWriteAccess = board.collaborations.some(
-                (collab) => collab.userId === ctx.user.id && collab.accessLevel === 'write'
-            );
-
-            if (!isOwner && !hasWriteAccess) {
-                throw new TRPCError({
-                    code: 'FORBIDDEN',
-                    message: 'You do not have permission to update this board',
-                });
-            }
-
-            // Update the board
-            const updatedBoard = await ctx.prisma.board.update({
-                where: {id},
-                data,
-            });
-
-            return updatedBoard;
-        }),
-
-    // Delete a board
-    delete: protectedProcedure
-        .input(z.object({id: z.string()}))
-        .mutation(async ({ctx, input}) => {
-            const {id} = input;
-
-            // Find the board
-            const board = await ctx.prisma.board.findUnique({
-                where: {id},
-            });
-
-            if (!board) {
-                throw new TRPCError({
-                    code: 'NOT_FOUND',
-                    message: 'Board not found',
-                });
-            }
-
-            // Check if user is the owner
-            if (board.ownerId !== ctx.user.id) {
-                throw new TRPCError({
-                    code: 'FORBIDDEN',
-                    message: 'Only the board owner can delete it',
-                });
-            }
-
-            // Delete the board
-            await ctx.prisma.board.delete({
-                where: {id},
-            });
-
-            return {success: true};
-        }),
+      return { success: true };
+    }),
 });
