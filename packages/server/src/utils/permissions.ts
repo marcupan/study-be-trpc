@@ -1,6 +1,5 @@
-import { TRPCError } from '@trpc/server';
-
 import type { Prisma, PrismaClient } from '@prisma/client';
+import { TRPCError } from '@trpc/server';
 
 export type AccessLevel = 'read' | 'write' | 'owner';
 

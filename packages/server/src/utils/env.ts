@@ -18,7 +18,8 @@ export function validateEnv(): Env {
 
   if (!result.success) {
     console.error('❌ Invalid environment variables:');
-    console.error(z.treeifyError(result.error));
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    console.error(JSON.stringify(result.error.format(), null, 2));
     throw new Error('Invalid environment variables');
   }
 

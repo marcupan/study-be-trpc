@@ -1,25 +1,23 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { validateEnv } from './env';
 
 describe('Environment Validation', () => {
-  const originalEnv = process.env;
-
   beforeEach(() => {
-    // Reset the environment before each test
-    process.env = { ...originalEnv };
+    // Clear all environment variable stubs before each test
+    vi.unstubAllEnvs();
   });
 
   afterEach(() => {
-    // Restore original environment
-    process.env = originalEnv;
+    // Restore original environment after each test
+    vi.unstubAllEnvs();
   });
 
   it('should validate correct environment variables', () => {
-    process.env.DATABASE_URL = 'file:./dev.db';
-    process.env.JWT_SECRET = 'a'.repeat(32);
-    process.env.PORT = '4000';
-    process.env.NODE_ENV = 'development';
+    vi.stubEnv('DATABASE_URL', 'file:./dev.db');
+    vi.stubEnv('JWT_SECRET', 'a'.repeat(32));
+    vi.stubEnv('PORT', '4000');
+    vi.stubEnv('NODE_ENV', 'development');
 
     const env = validateEnv();
 
@@ -30,10 +28,10 @@ describe('Environment Validation', () => {
   });
 
   it('should use default values for optional variables', () => {
-    process.env.DATABASE_URL = 'file:./dev.db';
-    process.env.JWT_SECRET = 'a'.repeat(32);
-    delete process.env.PORT;
-    delete process.env.NODE_ENV;
+    vi.stubEnv('DATABASE_URL', 'file:./dev.db');
+    vi.stubEnv('JWT_SECRET', 'a'.repeat(32));
+    vi.stubEnv('PORT', undefined);
+    vi.stubEnv('NODE_ENV', undefined);
 
     const env = validateEnv();
 
@@ -42,26 +40,26 @@ describe('Environment Validation', () => {
   });
 
   it('should throw error if DATABASE_URL is missing', () => {
-    delete process.env.DATABASE_URL;
-    process.env.JWT_SECRET = 'a'.repeat(32);
+    vi.stubEnv('DATABASE_URL', undefined);
+    vi.stubEnv('JWT_SECRET', 'a'.repeat(32));
 
     expect(() => validateEnv()).toThrow('Invalid environment variables');
   });
 
   it('should throw error if JWT_SECRET is too short', () => {
-    process.env.DATABASE_URL = 'file:./dev.db';
-    process.env.JWT_SECRET = 'short';
+    vi.stubEnv('DATABASE_URL', 'file:./dev.db');
+    vi.stubEnv('JWT_SECRET', 'short');
 
     expect(() => validateEnv()).toThrow('Invalid environment variables');
   });
 
   it('should accept valid NODE_ENV values', () => {
-    const validEnvs = ['development', 'production', 'test'];
+    const validEnvs = ['development', 'production', 'test'] as const;
 
     validEnvs.forEach((nodeEnv) => {
-      process.env.DATABASE_URL = 'file:./dev.db';
-      process.env.JWT_SECRET = 'a'.repeat(32);
-      process.env.NODE_ENV = nodeEnv;
+      vi.stubEnv('DATABASE_URL', 'file:./dev.db');
+      vi.stubEnv('JWT_SECRET', 'a'.repeat(32));
+      vi.stubEnv('NODE_ENV', nodeEnv);
 
       const env = validateEnv();
       expect(env.NODE_ENV).toBe(nodeEnv);

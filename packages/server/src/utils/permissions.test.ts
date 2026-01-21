@@ -1,9 +1,8 @@
+import type { PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { checkBoardAccess, requireBoardOwner } from './permissions';
-
-import type { PrismaClient } from '@prisma/client';
 
 // Mock Prisma Client with proper typing
 const mockFindUnique = vi.fn();
