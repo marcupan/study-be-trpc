@@ -2,14 +2,11 @@ import { execSync } from 'child_process';
 
 import { PrismaLibSql } from '@prisma/adapter-libsql';
 import { PrismaClient } from '@prisma/client';
+import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
 import { afterAll, beforeAll, beforeEach } from 'vitest';
-
 
 import { createContext } from '../../context';
 import { appRouter } from '../index';
-
-import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
-
 
 // Create test database adapter
 const testAdapter = new PrismaLibSql({

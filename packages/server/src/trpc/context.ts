@@ -1,12 +1,9 @@
 import { PrismaLibSql } from '@prisma/adapter-libsql';
 import { PrismaClient } from '@prisma/client';
+import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
 import dotenv from 'dotenv';
 
 import { verifyToken } from '../utils/auth';
-
-import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
-
-
 
 // Load environment variables before initializing Prisma
 dotenv.config();

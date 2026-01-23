@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { createCaller, prisma, setupTestDatabase } from './test-helpers';
 import { hashPassword } from '../../../utils/auth';
-
+import { createCaller, prisma, setupTestDatabase } from './test-helpers';
 
 // TODO: Set up test database schema before running these tests
 // Run: cd packages/server && DATABASE_URL="file:./test.db" npx prisma db push
