@@ -7,7 +7,6 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -34,6 +33,8 @@ model Board {
   owner          User            @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   tasks          Task[]
   collaborations Collaboration[]
+
+  @@index([ownerId])
 }
 
 model Task {
@@ -51,6 +52,11 @@ model Task {
   creator     User     @relation("TaskCreator", fields: [creatorId], references: [id])
   updaterId   String
   updater     User     @relation("TaskUpdater", fields: [updaterId], references: [id])
+
+  @@index([boardId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Collaboration {
@@ -64,4 +70,6 @@ model Collaboration {
   board       Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
 
   @@unique([userId, boardId])
+  @@index([userId])
+  @@index([boardId])
 }
