@@ -9,7 +9,7 @@ describe('Environment Validation', () => {
   });
 
   afterEach(() => {
-    // Restore original environment after each test
+    // Restore the original environment after each test
     vi.unstubAllEnvs();
   });
 
