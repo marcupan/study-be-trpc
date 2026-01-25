@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { useRouter } from 'next/router';
 import Link from 'next/link';
-import Layout from '../../components/Layout';
-import { trpc } from '../../utils/trpc';
+
+import Layout from '@/components/Layout';
+import { trpc } from '@/utils/trpc';
 
 export default function BoardsList() {
-  const router = useRouter();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
   const [newBoardDescription, setNewBoardDescription] = useState('');
@@ -14,18 +13,22 @@ export default function BoardsList() {
   // Fetch all boards
   const { data: boardsData, isLoading, refetch } = trpc.board.getAll.useQuery();
 
-  // Create board mutation
+  // Create a board mutation
   const createBoardMutation = trpc.board.create.useMutation({
     onSuccess: () => {
       setIsCreateModalOpen(false);
       setNewBoardName('');
       setNewBoardDescription('');
-      refetch();
-    },
-    onError: (error) => {
-      setError(error.message);
+      void refetch();
     },
   });
+
+  // React Query v5: Handle mutation errors via effect
+  if (createBoardMutation.error) {
+    if (error !== createBoardMutation.error.message) {
+      setError(createBoardMutation.error.message);
+    }
+  }
 
   const handleCreateBoard = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,11 +48,11 @@ export default function BoardsList() {
   return (
     <Layout title="Your Boards">
       <div className="mb-6 flex justify-between items-center">
-        <p className="text-gray-500">
-          Manage your task boards and collaborations
-        </p>
+        <p className="text-gray-500">Manage your task boards and collaborations</p>
         <button
-          onClick={() => setIsCreateModalOpen(true)}
+          onClick={() => {
+            setIsCreateModalOpen(true);
+          }}
           className="btn btn-primary"
         >
           Create New Board
@@ -70,18 +73,13 @@ export default function BoardsList() {
                 key={board.id}
                 className="card hover:shadow-lg transition-shadow"
               >
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {board.name}
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900">{board.name}</h3>
                 {board.description && (
-                  <p className="mt-1 text-gray-500 text-sm line-clamp-2">
-                    {board.description}
-                  </p>
+                  <p className="mt-1 text-gray-500 text-sm line-clamp-2">{board.description}</p>
                 )}
                 <div className="mt-4 flex justify-between items-center">
                   <span className="text-xs text-gray-500">
-                    Created{' '}
-                    {new Date(board.createdAt).toLocaleDateString()}
+                    Created {new Date(board.createdAt).toLocaleDateString()}
                   </span>
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     Owner
@@ -101,9 +99,7 @@ export default function BoardsList() {
           {boardsData?.collaborated && boardsData.collaborated.length > 0 && (
             <>
               <div className="col-span-full mt-8 mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Shared with you
-                </h2>
+                <h2 className="text-xl font-semibold text-gray-900">Shared with you</h2>
               </div>
               {boardsData.collaborated.map((board) => (
                 <Link
@@ -111,17 +107,13 @@ export default function BoardsList() {
                   key={board.id}
                   className="card hover:shadow-lg transition-shadow"
                 >
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {board.name}
-                  </h3>
+                  <h3 className="text-lg font-semibold text-gray-900">{board.name}</h3>
                   {board.description && (
-                    <p className="mt-1 text-gray-500 text-sm line-clamp-2">
-                      {board.description}
-                    </p>
+                    <p className="mt-1 text-gray-500 text-sm line-clamp-2">{board.description}</p>
                   )}
                   <div className="mt-4 flex justify-between items-center">
                     <span className="text-xs text-gray-500">
-                      Owner: {board.owner.name || board.owner.email}
+                      Owner: {board.owner.name ?? board.owner.email}
                     </span>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                       {board.accessLevel === 'write' ? 'Can Edit' : 'Read Only'}
@@ -138,9 +130,7 @@ export default function BoardsList() {
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Create New Board
-            </h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Board</h3>
             <form onSubmit={handleCreateBoard}>
               <div className="mb-4">
                 <label
@@ -155,7 +145,9 @@ export default function BoardsList() {
                   className="input w-full"
                   placeholder="Enter board name"
                   value={newBoardName}
-                  onChange={(e) => setNewBoardName(e.target.value)}
+                  onChange={(e) => {
+                    setNewBoardName(e.target.value);
+                  }}
                   required
                 />
               </div>
@@ -172,30 +164,30 @@ export default function BoardsList() {
                   placeholder="Enter board description"
                   rows={3}
                   value={newBoardDescription}
-                  onChange={(e) => setNewBoardDescription(e.target.value)}
+                  onChange={(e) => {
+                    setNewBoardDescription(e.target.value);
+                  }}
                 />
               </div>
 
-              {error && (
-                <div className="text-red-500 text-sm mb-4">{error}</div>
-              )}
+              {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
 
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => setIsCreateModalOpen(false)}
+                  onClick={() => {
+                    setIsCreateModalOpen(false);
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={createBoardMutation.isLoading}
+                  disabled={createBoardMutation.isPending}
                 >
-                  {createBoardMutation.isLoading
-                    ? 'Creating...'
-                    : 'Create Board'}
+                  {createBoardMutation.isPending ? 'Creating...' : 'Create Board'}
                 </button>
               </div>
             </form>
@@ -204,4 +196,11 @@ export default function BoardsList() {
       )}
     </Layout>
   );
+}
+
+// Disable SSG for this page since it requires authentication
+export function getServerSideProps() {
+  return {
+    props: {},
+  };
 }
