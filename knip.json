@@ -1,0 +1,25 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "project": ["**/*.ts"]
+    },
+    "packages/shared": {
+      "project": ["src/**/*.ts"],
+      "ignore": ["**/*.test.ts"]
+    },
+    "packages/server": {
+      "entry": ["prisma/prisma.config.ts"],
+      "project": ["src/**/*.ts", "prisma/**/*.ts"],
+      "ignore": ["**/*.test.ts", "**/__tests__/**"]
+    },
+    "packages/client": {
+      "entry": ["src/pages/**/*.tsx"],
+      "project": ["src/**/*.ts", "src/**/*.tsx", "*.js"]
+    }
+  },
+  "ignore": ["**/*.test.ts", "**/__tests__/**", "**/dist/**", "**/.next/**", "**/node_modules/**"],
+  "ignoreDependencies": ["@types/*", "@tasksync/shared", "zod", "pino-pretty"],
+  "ignoreBinaries": ["prisma"],
+  "ignoreExportsUsedInFile": true
+}

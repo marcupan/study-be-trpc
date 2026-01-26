@@ -27,12 +27,20 @@ logs/
 .env.*
 packages/**/.env
 packages/**/.env.*
+# But keep .env.example files
+!.env.example
+!packages/**/.env.example
 
 # Prisma / SQLite
 packages/server/prisma/dev.db
 packages/server/prisma/dev.db-journal
 packages/**/prisma/*.db
 packages/**/prisma/*.db-journal
+# Test databases
+test.db
+test.db-journal
+packages/**/test.db
+packages/**/test.db-journal
 
 # OS files
 .DS_Store
@@ -50,9 +58,26 @@ Thumbs.db
 packages/client/.next/
 packages/client/out/
 
-# Coverage
+# Testing and Coverage
 coverage/
+.vitest/
+test-results/
+*.test.db
+*.test.db-journal
+
+# Code quality reports and caches
+.jscpd/
+.eslintcache
+**/node_modules/.cache/
+*.report.json
+*.report.txt
+*-report.*
 
 # Lockfiles (keep only one for chosen PM)
 package-lock.json
 yarn.lock
+
+# Documentation files to keep (explicitly not ignored)
+README.md
+docs/**/*.md
+*.md

@@ -1,0 +1,8 @@
+{
+  "ignores": [
+    "@ianvs/prettier-plugin-sort-imports",
+    "@types/eslint__js",
+    "@vitest/coverage-v8",
+    "@vitest/ui"
+  ]
+}

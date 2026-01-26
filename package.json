@@ -7,6 +7,9 @@
   "workspaces": [
     "packages/*"
   ],
+  "overrides": {
+    "hono": "^4.11.4"
+  },
   "scripts": {
     "dev": "npm run dev:client & npm run dev:server & npm run dev:shared",
     "dev:client": "cd packages/client && npm run dev",
@@ -16,6 +19,7 @@
     "build": "turbo run build",
     "start": "node packages/server/dist/index.js",
     "clean": "rm -rf node_modules packages/*/node_modules packages/*/.next packages/*/dist .turbo",
+    "clean:cache": "rm -rf .turbo **/.turbo **/node_modules/.cache **/.next/cache coverage .jscpd",
     "fresh": "npm run clean && npm install && npm run db:generate && npm run build",
     "typecheck": "tsc --project packages/shared/tsconfig.json --noEmit && tsc --project packages/server/tsconfig.json --noEmit && tsc --project packages/client/tsconfig.json --noEmit",
     "lint": "eslint . --max-warnings 0",
@@ -35,6 +39,15 @@
     "check:exports-manual:server": "echo '\n📦 Checking server package exports (excluding index.ts public API)...' && cd packages/server && ts-prune --ignore 'src/index.ts' --error || true",
     "check:exports-manual:client": "echo '\n📦 Checking client package exports (Next.js pages are intentionally exported)...' && cd packages/client && ts-prune --ignore 'src/pages' --error || true",
     "check:all": "npm run typecheck && npm run lint && npm run test && npm run check:quality",
+    "security:audit": "npm audit --audit-level=moderate",
+    "security:audit:fix": "npm audit fix",
+    "security:check": "npm run security:audit && npm run lint",
+    "outdated": "npm outdated || true",
+    "outdated:check": "npm outdated --depth=0 || true",
+    "update:deps": "npm update && npm run outdated:check",
+    "validate": "npm run format:check && npm run typecheck && npm run lint && npm run test",
+    "prebuild": "npm run validate",
+    "analyze:bundle": "cd packages/client && ANALYZE=true npm run build",
     "db:generate": "cd packages/server && npx prisma generate",
     "db:migrate": "cd packages/server && npx prisma migrate dev",
     "db:reset": "cd packages/server && npx prisma migrate reset",
@@ -53,19 +66,19 @@
     "@eslint/js": "^9.17.0",
     "@ianvs/prettier-plugin-sort-imports": "^4.7.0",
     "@types/eslint__js": "^8.42.3",
-    "@types/node": "^25.0.3",
-    "@vitest/coverage-v8": "^4.0.16",
-    "@vitest/ui": "^4.0.16",
+    "@types/node": "^25.0.9",
+    "@vitest/coverage-v8": "^4.0.17",
+    "@vitest/ui": "^4.0.17",
     "depcheck": "^1.4.7",
     "eslint": "^9.17.0",
     "eslint-plugin-import-x": "^4.16.1",
-    "jscpd": "^4.0.5",
-    "knip": "^5.78.0",
-    "prettier": "^3.4.2",
+    "jscpd": "^4.0.7",
+    "knip": "^5.82.1",
+    "prettier": "^3.8.0",
     "ts-prune": "^0.10.3",
-    "turbo": "^2.0.0",
+    "turbo": "^2.7.5",
     "typescript": "^5.7.2",
-    "typescript-eslint": "^8.50.1",
-    "vitest": "^4.0.16"
+    "typescript-eslint": "^8.53.1",
+    "vitest": "^4.0.17"
   }
 }
